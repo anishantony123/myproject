@@ -1,0 +1,131 @@
+import { Component } from '@angular/core';
+declare var Snap: any;
+declare var mina: any;  
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent { 
+  title = 'app';
+
+  public arrowconfig: any;
+  public arrowList: any = [];
+  public leftCurves: any = [];
+  public rightCurves: any = [];
+  public drawReverse: boolean;
+
+
+  ngOnInit() {
+    this.arrowconfig = {
+      height:70,
+      length:300,
+      pointlength:30,
+      fontsize:'',
+      bordercolor:'#0f0',
+      fillcolor:'#000',
+      spacing:25,
+      startx:100,
+      starty:100,
+      rowmax:3,
+      curve:400
+    }
+    const paper = Snap('#roadmap');
+    paper.attr({
+      width:'100%',
+      height:'100%'
+    })
+    this.drawReverse = false;
+    
+    this.drawArrows(paper);
+    
+  }
+
+  drawArrows(paper) {
+    this.arrowList = [];
+    let placing = 0;
+    for(let i=0; i<10;i++) {
+      let pathstring = "M";
+      
+      let startXPoint = 0;
+      let startYPoint = this.arrowconfig.starty;
+      if(this.drawReverse === false) {
+        startXPoint = this.arrowconfig.startx + (this.arrowconfig.curve/2) + (this.arrowconfig.length+this.arrowconfig.pointlength+this.arrowconfig.spacing)*placing;
+        pathstring = pathstring+startXPoint+" "+startYPoint;
+        pathstring = pathstring + "H" + (startXPoint+this.arrowconfig.length);
+        pathstring = pathstring + "L" + (startXPoint+this.arrowconfig.length+this.arrowconfig.pointlength)+" "+ (startYPoint+(this.arrowconfig.height/2));
+        pathstring = pathstring + "L" + (startXPoint+this.arrowconfig.length)+" "+ (startYPoint+this.arrowconfig.height);
+        pathstring = pathstring + "H" + startXPoint;
+        placing++;
+      } else {
+        startXPoint = this.arrowconfig.startx + (this.arrowconfig.length+this.arrowconfig.pointlength+this.arrowconfig.spacing)*placing;
+        pathstring = pathstring + "L" + (startXPoint+this.arrowconfig.length-this.arrowconfig.pointlength)+" "+ (startYPoint+(this.arrowconfig.height/2));
+        pathstring = pathstring + "L" + (startXPoint+this.arrowconfig.length)+" "+ (startYPoint+this.arrowconfig.height);
+        placing--;
+      }
+      
+
+      if (i===0) {
+        pathstring = pathstring+ "V" +startYPoint;
+      } else {
+        if(this.drawReverse === false) {
+        pathstring = pathstring+ "L" + (startXPoint + this.arrowconfig.pointlength) + " " +(startYPoint+(this.arrowconfig.height/2));
+        pathstring = pathstring+ "L" + (startXPoint) + " " +(startYPoint);
+        }
+      }
+
+      let arrowpath = paper.path(pathstring);
+      arrowpath.attr({
+        stroke:"#000",
+        fill:"none"
+      });
+
+      this.arrowList.push(arrowpath);
+      if((i+1)%this.arrowconfig.rowmax === 0 && (i+1)%(this.arrowconfig.rowmax*2) !== 0 ) {
+        this.drawReverse = true;
+        let curvedpath = "M";
+        let curveX = this.arrowconfig.startx + (this.arrowconfig.curve/2) + (this.arrowconfig.length+this.arrowconfig.pointlength+this.arrowconfig.spacing)*this.arrowconfig.rowmax;
+        let curveY = this.arrowconfig.starty+ (this.arrowconfig.curve*2)*this.leftCurves.length;
+        curvedpath = curvedpath+curveX+" "+curveY;
+        curvedpath = curvedpath + "A" + this.arrowconfig.curve/2 + " " +this.arrowconfig.curve/2+" 0 1 1 "+ curveX+ " " +(curveY+this.arrowconfig.curve);
+        curvedpath = curvedpath + "L" + (curveX-this.arrowconfig.pointlength)+" "+ (curveY+this.arrowconfig.curve-(this.arrowconfig.height/2));
+        curvedpath = curvedpath + "L" + (curveX)+" "+ (curveY+this.arrowconfig.curve-(this.arrowconfig.height));
+        curvedpath = curvedpath + "A" + ((this.arrowconfig.curve/2) - this.arrowconfig.height) + " " +((this.arrowconfig.curve/2) - this.arrowconfig.height)+" 0 1 0 "+ curveX+ " " +(curveY+this.arrowconfig.height);
+        curvedpath = curvedpath + "L" + (curveX+this.arrowconfig.pointlength)+" "+ (curveY+(this.arrowconfig.height/2));
+        curvedpath = curvedpath + "L" + (curveX)+" "+ curveY;
+        let curvepath = paper.path(curvedpath);
+        curvepath.attr({
+          stroke:"#000",
+          fill:"none"
+        });
+
+        this.leftCurves.push(curvedpath);
+
+      }
+
+      if((i+1)%this.arrowconfig.rowmax  === 0 && (i+1)%(this.arrowconfig.rowmax*2) === 0 ) {
+        let curvedpath = "M";
+        this.drawReverse = false;
+        let curveX = this.arrowconfig.startx ;
+        let curveY = this.arrowconfig.starty+ (this.arrowconfig.curve)*this.leftCurves.length;
+        curvedpath = curvedpath+curveX+" "+curveY;
+        curvedpath = curvedpath + "A" + this.arrowconfig.curve/2 + " " +this.arrowconfig.curve/2+" 0 1 0 "+ curveX+ " " +(curveY+this.arrowconfig.curve);
+        curvedpath = curvedpath + "L" + (curveX-this.arrowconfig.pointlength)+" "+ (curveY+this.arrowconfig.curve-(this.arrowconfig.height/2));
+        curvedpath = curvedpath + "L" + (curveX)+" "+ (curveY+this.arrowconfig.curve-(this.arrowconfig.height));
+        curvedpath = curvedpath + "A" + ((this.arrowconfig.curve/2) - this.arrowconfig.height) + " " +((this.arrowconfig.curve/2) - this.arrowconfig.height)+" 0 1 1 "+ curveX+ " " +(curveY+this.arrowconfig.height);
+        curvedpath = curvedpath + "L" + (curveX+this.arrowconfig.pointlength)+" "+ (curveY+(this.arrowconfig.height/2));
+        curvedpath = curvedpath + "L" + (curveX)+" "+ curveY;
+        let curvepath = paper.path(curvedpath);
+        curvepath.attr({
+          stroke:"#000",
+          fill:"none"
+        });
+
+        this.rightCurves.push(curvedpath);
+      }
+      
+      
+    }
+   
+  }
+}
